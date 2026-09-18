@@ -29,7 +29,7 @@ This web application visually reproduces the original PG payment receipt design 
 - **Business Name**: DIPU BOYS PG
 - **Address**: Near Assam down town University Gate, Guwahati - 781026
 - **Tagline**: SAFE STAY • BETTER TOMORROW
-- **Default UPI ID**: `dipuboyspg01@cnrb`
+- **Default UPI ID**: `dipuXXXX@XXXXX`
 
 ---
 
