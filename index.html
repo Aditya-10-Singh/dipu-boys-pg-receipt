@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DIPU BOYS PG - Payment Receipt Generator</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- html2pdf Library for High Quality PDF Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Top App Navigation Header -->
+  <header class="app-header">
+    <div class="app-header-content">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-house-user"></i>
+        </div>
+        <div>
+          <h1>DIPU BOYS PG</h1>
+          <p>Payment Receipt Generator & Manager</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="storage-badge" id="storageStatusBadge">
+          <i class="fa-solid fa-shield-halved"></i> Device Saved Details Active
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile View Switcher Tabs -->
+  <div class="mobile-tabs-bar">
+    <button class="tab-btn active" id="tabFormBtn" onclick="switchMobileTab('form')">
+      <i class="fa-solid fa-pen-to-square"></i> 1. Enter Details
+    </button>
+    <button class="tab-btn" id="tabPreviewBtn" onclick="switchMobileTab('preview')">
+      <i class="fa-solid fa-receipt"></i> 2. View Receipt
+    </button>
+  </div>
+
+  <!-- Main Container -->
+  <main class="main-layout">
+
+    <!-- LEFT PANEL: Form Inputs -->
+    <section class="form-panel" id="formPanel">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-sliders"></i> Receipt Form Details</h2>
+        <p>Fill in the payment information below. The receipt updates in real-time.</p>
+      </div>
+
+      <form id="receiptForm" onsubmit="event.preventDefault();">
+        
+        <!-- SECTION 1: Saved Owner Payment Info -->
+        <div class="form-card highlight-card">
+          <div class="card-title">
+            <h3><i class="fa-solid fa-building-columns"></i> Owner Payment Details</h3>
+            <button type="button" class="btn-text" id="saveOwnerBtn" onclick="saveOwnerDetails()">
+              <i class="fa-solid fa-floppy-disk"></i> Save Defaults
+            </button>
+          </div>
+          <div class="form-grid cols-2">
+            <div class="form-group">
+              <label for="inputPaymentTo">Payment To <span class="required">*</span></label>
+              <input type="text" id="inputPaymentTo" value="DIPU BOYS PG" placeholder="e.g. DIPU BOYS PG" oninput="updateReceipt()">
+            </div>
+            <div class="form-group">
+              <label for="inputUpiId">UPI ID <span class="required">*</span></label>
+              <input type="text" id="inputUpiId" value="dipuboyspg01@cnrb" placeholder="e.g. dipuboyspg01@cnrb" oninput="updateReceipt()">
+            </div>
+          </div>
+          <p class="input-hint"><i class="fa-solid fa-circle-info"></i> Click "Save Defaults" so these payment details are auto-filled for future receipts.</p>
+        </div>
+
+        <!-- SECTION 2: Resident & Receipt Info -->
+        <div class="form-card">
+          <div class="card-title">
+            <h3><i class="fa-solid fa-user-check"></i> Resident & Date Info</h3>
+          </div>
+          <div class="form-grid cols-2">
+            <div class="form-group full-width">
+              <label for="inputResidentName">Resident Name <span class="required">*</span></label>
+              <input type="text" id="inputResidentName" placeholder="e.g. Rahul Sharma" value="Rahul Sharma" oninput="updateReceipt()">
+            </div>
+            <div class="form-group">
+              <label for="inputDate">Date <span class="required">*</span></label>
+              <input type="text" id="inputDate" placeholder="DD/MM/YYYY" oninput="updateReceipt()">
+            </div>
+            <div class="form-group">
+              <label for="inputPeriod">Period / Duration <span class="required">*</span></label>
+              <input type="text" id="inputPeriod" placeholder="e.g. 01/09/2026 to 30/09/2026" value="01/09/2026 to 30/09/2026" oninput="updateReceipt()">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Particulars Breakdown -->
+        <div class="form-card">
+          <div class="card-title">
+            <h3><i class="fa-solid fa-list-check"></i> Payment Particulars</h3>
+            <button type="button" class="btn-text" onclick="addParticularRow()">
+              <i class="fa-solid fa-plus"></i> Add Item Line
+            </button>
+          </div>
+          
+          <div id="particularsInputsContainer">
+            <!-- Dynamic rows inserted via JavaScript -->
+          </div>
+
+          <div class="form-grid cols-2 mt-3">
+            <div class="form-group">
+              <label for="inputTotalAmount">Total Paid (₹) <span class="required">*</span></label>
+              <div class="currency-input-wrap">
+                <span class="currency-symbol">₹</span>
+                <input type="number" id="inputTotalAmount" placeholder="e.g. 6500" value="6500" min="0" step="any" oninput="handleAmountChange()">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="inputAmountWords">Amount in Words</label>
+              <input type="text" id="inputAmountWords" placeholder="Auto-generated from total" oninput="updateReceipt()">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: Transaction Details (Optional) -->
+        <div class="form-card">
+          <div class="card-title">
+            <h3><i class="fa-solid fa-receipt"></i> Transaction Details (Optional)</h3>
+          </div>
+          <div class="form-grid cols-2">
+            <div class="form-group">
+              <label for="inputTxnId">Transaction ID / Ref No.</label>
+              <input type="text" id="inputTxnId" placeholder="e.g. TXN987654321" oninput="updateReceipt()">
+            </div>
+            <div class="form-group">
+              <label for="inputPaymentMode">Payment Mode</label>
+              <select id="inputPaymentMode" onchange="updateReceipt()">
+                <option value="UPI / Online Transfer" selected>UPI / Online Transfer</option>
+                <option value="Google Pay (GPay)">Google Pay (GPay)</option>
+                <option value="PhonePe">PhonePe</option>
+                <option value="Paytm">Paytm</option>
+                <option value="Cash">Cash</option>
+                <option value="Bank NEFT / IMPS">Bank NEFT / IMPS</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Control Buttons -->
+        <div class="action-buttons-group">
+          <button type="button" class="btn btn-primary" onclick="generateReceiptAction()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Receipt
+          </button>
+          <button type="button" class="btn btn-success" onclick="downloadPDF()">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="printReceipt()">
+            <i class="fa-solid fa-print"></i> Print Receipt
+          </button>
+          <button type="button" class="btn btn-outline-danger" onclick="resetForm()">
+            <i class="fa-solid fa-rotate-left"></i> Reset Form
+          </button>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- RIGHT PANEL: Live Printable Receipt Preview -->
+    <section class="preview-panel" id="previewPanel">
+      
+      <div class="preview-toolbar no-print">
+        <span class="preview-label"><i class="fa-solid fa-eye"></i> Live Printable Receipt Preview</span>
+        <div class="toolbar-actions">
+          <button class="btn btn-sm btn-success" onclick="downloadPDF()">
+            <i class="fa-solid fa-download"></i> PDF
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="printReceipt()">
+            <i class="fa-solid fa-print"></i> Print
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Document Wrapper (Target for PDF & Print) -->
+      <div class="receipt-paper-wrapper">
+        <div class="receipt-container" id="receiptDocument">
+          
+          <!-- Outer Top-Left Decorative Corner Wave -->
+          <div class="corner-wave top-left-wave">
+            <svg viewBox="0 0 120 120" preserveAspectRatio="none">
+              <path d="M0,0 L120,0 C80,30 40,60 0,120 Z" fill="#16324f"></path>
+              <path d="M0,0 L90,0 C60,25 30,45 0,90 Z" fill="#20466c" opacity="0.5"></path>
+            </svg>
+          </div>
+
+          <!-- Outer Bottom-Right Decorative Corner Wave -->
+          <div class="corner-wave bottom-right-wave">
+            <svg viewBox="0 0 140 140" preserveAspectRatio="none">
+              <path d="M140,140 L0,140 C50,110 90,70 140,0 Z" fill="#16324f"></path>
+              <path d="M140,140 L40,140 C80,115 110,85 140,40 Z" fill="#20466c" opacity="0.4"></path>
+            </svg>
+          </div>
+
+          <!-- Background Faint Watermark (Bottom-Right House & Foliage Vector) -->
+          <div class="background-watermark">
+            <svg viewBox="0 0 200 200" fill="none" stroke="#d5e3f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M170 180 C170 130 140 100 120 90" stroke-width="3" opacity="0.6"/>
+              <path d="M160 160 C180 150 190 130 185 110 C165 115 155 135 160 160Z" fill="#eaf2fa" opacity="0.7"/>
+              <path d="M145 135 C160 120 165 100 155 85 C140 95 135 115 145 135Z" fill="#eaf2fa" opacity="0.7"/>
+              <path d="M130 110 C140 90 142 70 130 60 C120 72 120 92 130 110Z" fill="#eaf2fa" opacity="0.7"/>
+              <path d="M60 180 V120 L110 80 L160 120 V180 Z" stroke-width="2.5" opacity="0.4"/>
+              <rect x="90" y="130" width="35" height="50" rx="3" stroke-width="2" opacity="0.4"/>
+              <rect x="75" y="100" width="20" height="20" rx="2" stroke-width="2" opacity="0.4"/>
+            </svg>
+          </div>
+
+          <!-- RECEIPT HEADER -->
+          <div class="receipt-header">
+            <div class="header-left">
+              <!-- House Logo -->
+              <div class="logo-box">
+                <svg viewBox="0 0 100 90" class="logo-svg">
+                  <path d="M50 10 L10 42 H22 V75 H78 V42 H90 Z" fill="#16324f"/>
+                  <rect x="65" y="20" width="8" height="18" fill="#16324f"/>
+                  <path d="M5 82 Q 50 72 95 82" stroke="#16324f" stroke-width="4" fill="none" stroke-linecap="round"/>
+                  <path d="M15 87 Q 50 80 85 87" stroke="#16324f" stroke-width="3" fill="none" stroke-linecap="round"/>
+                  <rect x="40" y="45" width="20" height="20" fill="#ffffff" rx="1"/>
+                  <line x1="50" y1="45" x2="50" y2="65" stroke="#16324f" stroke-width="2"/>
+                  <line x1="40" y1="55" x2="60" y2="55" stroke="#16324f" stroke-width="2"/>
+                </svg>
+              </div>
+              
+              <!-- Title & Address -->
+              <div class="header-title-details">
+                <h1 class="pg-title">DIPU BOYS P.G.</h1>
+                <div class="pg-tagline">
+                  <span>SAFE STAY</span>
+                  <span class="dot">•</span>
+                  <span>BETTER TOMORROW</span>
+                </div>
+                <div class="pg-address">
+                  <i class="fa-solid fa-location-dot location-icon"></i>
+                  <span>Near Assam Down Town University Gate, Guwahati, 781026</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Header Right Script Accent -->
+            <div class="header-right-accent">
+              <div class="script-badge">
+                <span class="script-text">Home Away From Home</span>
+                <svg class="script-underline" viewBox="0 0 160 20">
+                  <path d="M5 12 Q 80 18 140 6" stroke="#16324f" stroke-width="2" fill="none" stroke-linecap="round"/>
+                </svg>
+                <div class="mini-house-heart">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#16324f" stroke-width="2">
+                    <path d="M3 10L12 3L21 10V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V10Z"/>
+                    <path d="M12 13C12 13 10 11.5 10 10.2C10 9.25 10.75 8.5 11.7 8.5C12.2 8.5 12.6 8.75 12.8 9.15C13 8.75 13.4 8.5 13.9 8.5C14.85 8.5 15.6 9.25 15.6 10.2C15.6 11.5 13.6 13 13.6 13L12 13Z" fill="#16324f" stroke="none"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Header Separator Line -->
+          <div class="header-divider"></div>
+
+          <!-- RECEIPT TITLE BAR & DATE -->
+          <div class="receipt-bar-section">
+            <div class="receipt-pill-title">
+              <div class="pill-icon">
+                <i class="fa-regular fa-file-lines"></i>
+              </div>
+              <div class="pill-text-container">
+                <span class="title-main">PAYMENT RECEIPT</span>
+                <span class="title-sub">(PAYING GUEST)</span>
+              </div>
+            </div>
+
+            <div class="receipt-date-display">
+              <span class="date-label">Date</span>
+              <span class="colon">:</span>
+              <span class="date-value" id="previewDate">18/09/2026</span>
+            </div>
+          </div>
+
+          <!-- RESIDENT INFO SECTION BOX -->
+          <div class="resident-info-card">
+            <div class="info-row">
+              <div class="info-cell name-cell">
+                <span class="info-label">Resident Name</span>
+                <span class="colon">:</span>
+                <span class="info-value" id="previewResidentName">Rahul Sharma</span>
+              </div>
+              <div class="info-divider"></div>
+              <div class="info-cell period-cell">
+                <span class="info-label">Period</span>
+                <span class="colon">:</span>
+                <span class="info-value" id="previewPeriod">01/09/2026 to 30/09/2026</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PARTICULARS & PAYMENT DETAILS GRID -->
+          <div class="particulars-payment-grid">
+            
+            <!-- LEFT: Particulars Table / Card -->
+            <div class="particulars-column">
+              <div class="section-navy-header">
+                <span>Particulars</span>
+                <span class="amount-header-label">Amount (₹)</span>
+              </div>
+              
+              <div class="particulars-body-table" id="previewParticularsList">
+                <!-- Dynamic particulars list -->
+              </div>
+
+              <!-- Total Paid Row -->
+              <div class="particulars-total-row">
+                <div class="total-label-box">
+                  <span>Total Paid</span>
+                </div>
+                <div class="total-value-box" id="previewTotalAmount">
+                  ₹ 6,500/-
+                </div>
+              </div>
+
+              <!-- Amount in Words Footer Line -->
+              <div class="amount-words-row" id="amountWordsContainer">
+                <span class="words-label">In Words:</span>
+                <span class="words-value" id="previewAmountWords">Six Thousand Five Hundred Rupees Only</span>
+              </div>
+            </div>
+
+            <!-- RIGHT: Payment Details Box -->
+            <div class="payment-details-column">
+              <div class="section-navy-header">
+                <span>PAYMENT DETAILS</span>
+              </div>
+
+              <div class="payment-details-body">
+                <div class="pay-detail-line">
+                  <span class="pay-label">To:</span>
+                  <span class="pay-val bold" id="previewPaymentTo">DIPU BOYS PG</span>
+                </div>
+                <div class="pay-detail-line">
+                  <span class="pay-label">UPI ID:</span>
+                  <span class="pay-val code" id="previewUpiId">dipuboyspg01@cnrb</span>
+                </div>
+                
+                <div class="pay-detail-line" id="previewTxnRow">
+                  <span class="pay-label">Txn ID:</span>
+                  <span class="pay-val" id="previewTxnId">--</span>
+                </div>
+                
+                <div class="pay-detail-line" id="previewModeRow">
+                  <span class="pay-label">Mode:</span>
+                  <span class="pay-val" id="previewPaymentMode">UPI / Online Transfer</span>
+                </div>
+              </div>
+
+              <!-- Handwritten Thank You Note -->
+              <div class="thank-you-accent">
+                <div class="thank-you-script">Thank You!</div>
+                <div class="thank-you-subscript">For staying with us</div>
+                <div class="thank-you-lines">
+                  <span class="line-1"></span>
+                  <span class="line-2"></span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RECEIPT FOOTER -->
+          <div class="receipt-footer">
+            <div class="footer-left-greeting">
+              <div class="footer-house-heart">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#16324f" stroke-width="2">
+                  <path d="M3 10L12 3L21 10V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V10Z"/>
+                  <path d="M12 13C12 13 10 11.5 10 10.2C10 9.25 10.75 8.5 11.7 8.5C12.2 8.5 12.6 8.75 12.8 9.15C13 8.75 13.4 8.5 13.9 8.5C14.85 8.5 15.6 9.25 15.6 10.2C15.6 11.5 13.6 13 13.6 13L12 13Z" fill="#16324f" stroke="none"/>
+                </svg>
+              </div>
+              <div class="greeting-text">
+                <p class="g-line1">We're glad to have you with us,</p>
+                <p class="g-line2">Your comfort is our priority.</p>
+              </div>
+            </div>
+
+            <div class="footer-right-signature">
+              <div class="signature-line"></div>
+              <p class="sig-title">Authorized Signature</p>
+              <p class="sig-subtitle">( PG Owner / Manager )</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Notification Toast Container -->
+  <div id="toastNotification" class="toast-notification">
+    <i class="fa-solid fa-circle-check"></i> <span id="toastMessage">Action completed successfully</span>
+  </div>
+
+  <!-- Custom App Script -->
+  <script src="js/app.js"></script>
+</body>
+</html>
